@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
 import java.util.HashMap;
-import java.util.Arrays;
 
 // java Server <port number>
 public class Server {
@@ -21,6 +20,25 @@ public class Server {
             clean += c;
         }
         return clean;
+    }
+
+    private static String register(String[] parsed, HashMap<String, String> dnsIp) {
+        String dns = cleanBuff(parsed[1]);
+        String ip = cleanBuff(parsed[2]);
+        if (dnsIp.get(dns) != null) {
+            return "Entry already exists";
+        }
+        dnsIp.put(dns, ip);
+        return "Number of DNS names registered: " + String.valueOf(dnsIp.size());
+    }
+
+    private static String lookup(String[] parsed, HashMap<String, String> dnsIp) {
+        String dns = cleanBuff(parsed[1]);
+        String response = dnsIp.get(dns);
+        if (response == null) {
+            return "No entry for DNS address: " + dns;
+        }
+        return dns + " " + response;
     }
 
     public static void main(String[] args) throws IOException{
@@ -44,8 +62,6 @@ public class Server {
             DatagramPacket packet = new DatagramPacket(rbuf, rbuf.length);
             socket.receive(packet);
 
-            System.out.println("packet received...");
-
             // parse request
             String received = new String(packet.getData());
             String[] parsed = received.split(" ");
@@ -54,14 +70,9 @@ public class Server {
             // execute request
             String response = "";
             if (parsed[0].equals("REGISTER")) {
-                dnsIp.put(parsed[1], parsed[2]);
-                response = "entry added: " + parsed[1] + " " + parsed[2];
+                response = register(parsed, dnsIp);
             } else if (parsed[0].equals("LOOKUP")) {
-                String dns = cleanBuff(parsed[1]);
-                response = dnsIp.get(dns);
-                if (response == null) {
-                    response = "No entry for DNS address: " + parsed[1];
-                }
+                response = lookup(parsed, dnsIp);
             }
 
             // send response
@@ -70,8 +81,6 @@ public class Server {
             port = packet.getPort();
             packet = new DatagramPacket(sbuf, sbuf.length, address, port);
             socket.send(packet);
-
-            System.out.println("response sent to: " + address + ":" + port);
         }
     }
 }

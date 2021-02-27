@@ -1,4 +1,5 @@
 import java.net.*;
+
 import java.io.*;
 
 // java Client <host> <port> <oper> <opnd>*
@@ -53,6 +54,8 @@ public class Client {
         // send request
         InetAddress address = InetAddress.getByName(host);
         DatagramSocket socket = new DatagramSocket(8000, address);
+        socket.setSoTimeout(3000);
+
         byte[] sbuf = request.getBytes();
         DatagramPacket packet = new DatagramPacket(sbuf, sbuf.length, address, port);
         socket.send(packet);
@@ -61,9 +64,16 @@ public class Client {
         System.out.println("socket address: " + socket.getLocalSocketAddress());
 
         // get response
-        byte[] rbuf = new byte[sbuf.length];
+        byte[] rbuf = new byte[256];
         packet = new DatagramPacket(rbuf, rbuf.length);
-        socket.receive(packet);
+
+        try {
+            socket.receive(packet);
+        } catch(SocketTimeoutException e) {
+            System.out.println("Time out!");
+            socket.close();
+            return;
+        }
 
         // display response
         String received = new String(packet.getData());
