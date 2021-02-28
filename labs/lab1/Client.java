@@ -56,7 +56,7 @@ public class Client {
 
         // send request
         InetAddress address = InetAddress.getByName(host);
-        DatagramSocket socket = new DatagramSocket(8000, address);
+        DatagramSocket socket = new DatagramSocket();
         socket.setSoTimeout(3000);
 
         byte[] sbuf = request.getBytes();

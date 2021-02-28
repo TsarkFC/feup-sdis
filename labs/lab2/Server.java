@@ -44,53 +44,66 @@ public class Server {
         return dns + " " + response;
     }
 
+    private static DatagramPacket setMulticastMsg(int port, String ip, MulticastSocket socket) throws IOException{
+        String message = ip + " " + String.valueOf(port);
+        byte[] buf = message.getBytes();
+        InetAddress group = InetAddress.getByName(ip); // "225.0.0.0"
+        socket.joinGroup(group);
+
+        return new DatagramPacket(buf, buf.length, group, port);
+    }
+
     public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.out.println("Usage: java Server <port number>");
+        if (args.length != 3) {
+            System.out.println("Usage: java Server <srvc_port> <mcast_addr> <mcast_port>");
             return;
         }
 
-        new ServerThread().start();
+        // start thread
+        Integer mcast_port = Integer.parseInt(args[2]);
+        MulticastSocket mcast_socket = new MulticastSocket(mcast_port); // 4446
+        new ServerThread(setMulticastMsg(mcast_port, args[1], mcast_socket), mcast_socket).start();
 
-        Integer port = Integer.parseInt(args[0]);
+        // open server
+        Integer srvc_port = Integer.parseInt(args[0]);
         InetAddress address = InetAddress.getByName("localhost");
-        DatagramSocket socket = new DatagramSocket(port, address);
+        DatagramSocket socket = new DatagramSocket(srvc_port, address);
         HashMap<String, String> dnsIp = new HashMap<String, String>();
         dnsIp.put("tsark.com", "128.0.0.0");
+        System.out.println("server open at " + socket.getLocalSocketAddress());
 
-        System.out.println("server open...");
-        System.out.println("socket address: " + socket.getLocalSocketAddress());
-
-        while (true) {
+        // run server
+        boolean quit = false;
+        while (!quit) {
             // get request
             byte[] rbuf = new byte[256];
             DatagramPacket packet = new DatagramPacket(rbuf, rbuf.length);
             socket.receive(packet);
 
             // parse request
-            String received = new String(packet.getData());
+            String received = new String(packet.getData(), 0, packet.getLength());
             String[] parsed = received.split(" ");
             requestReceived(parsed);
 
             // execute request
             String response = "";
-            System.out.println(parsed[0]);
             if (parsed[0].equals("REGISTER")) {
                 response = register(parsed, dnsIp);
             } else if (parsed[0].equals("LOOKUP")) {
                 response = lookup(parsed, dnsIp);
             } else if (parsed[0].equals("END")) {
-                break;
+                response = "Server closed...";
+                quit = true;
             }
 
             // send response
             byte[] sbuf = response.getBytes();
             address = packet.getAddress();
-            port = packet.getPort();
-            packet = new DatagramPacket(sbuf, sbuf.length, address, port);
+            packet = new DatagramPacket(sbuf, sbuf.length, address, packet.getPort());
             socket.send(packet);
         }
 
+        mcast_socket.close();
         socket.close();
     }
 }
