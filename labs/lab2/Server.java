@@ -2,7 +2,9 @@ import java.net.*;
 import java.io.*;
 import java.util.HashMap;
 
-// java Server <port number>
+//multicast: <mcast_addr> <mcast_port>: <srvc_addr> <srvc_port>
+
+// java Server <srvc_port> <mcast_addr> <mcast_port>
 public class Server {
     // Server: <oper> <opnd>*
     private static void requestReceived(String[] request) {
@@ -13,9 +15,19 @@ public class Server {
         }
     }
 
+    private static String cleanBuff(String s) {
+        String clean = "";
+        for (char c : s.toCharArray()) {
+            if ((int) c == 0)
+                return clean;
+            clean += c;
+        }
+        return clean;
+    }
+
     private static String register(String[] parsed, HashMap<String, String> dnsIp) {
-        String dns = parsed[1];
-        String ip = parsed[2];
+        String dns = cleanBuff(parsed[1]);
+        String ip = cleanBuff(parsed[2]);
         if (dnsIp.get(dns) != null) {
             return "Entry already exists";
         }
@@ -24,7 +36,7 @@ public class Server {
     }
 
     private static String lookup(String[] parsed, HashMap<String, String> dnsIp) {
-        String dns = parsed[1];
+        String dns = cleanBuff(parsed[1]);
         String response = dnsIp.get(dns);
         if (response == null) {
             return "No entry for DNS address: " + dns;
@@ -38,6 +50,8 @@ public class Server {
             return;
         }
 
+        new ServerThread().start();
+
         Integer port = Integer.parseInt(args[0]);
         InetAddress address = InetAddress.getByName("localhost");
         DatagramSocket socket = new DatagramSocket(port, address);
@@ -47,27 +61,26 @@ public class Server {
         System.out.println("server open...");
         System.out.println("socket address: " + socket.getLocalSocketAddress());
 
-        boolean quit = false;
-        while (!quit) {
+        while (true) {
             // get request
             byte[] rbuf = new byte[256];
             DatagramPacket packet = new DatagramPacket(rbuf, rbuf.length);
             socket.receive(packet);
 
             // parse request
-            String received = new String(packet.getData(), 0, packet.getLength());
+            String received = new String(packet.getData());
             String[] parsed = received.split(" ");
             requestReceived(parsed);
 
             // execute request
             String response = "";
+            System.out.println(parsed[0]);
             if (parsed[0].equals("REGISTER")) {
                 response = register(parsed, dnsIp);
             } else if (parsed[0].equals("LOOKUP")) {
                 response = lookup(parsed, dnsIp);
             } else if (parsed[0].equals("END")) {
-                response = "Server closed...";
-                quit = true;
+                break;
             }
 
             // send response
@@ -77,6 +90,7 @@ public class Server {
             packet = new DatagramPacket(sbuf, sbuf.length, address, port);
             socket.send(packet);
         }
+
         socket.close();
     }
 }

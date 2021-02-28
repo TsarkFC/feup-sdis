@@ -2,7 +2,9 @@ import java.net.*;
 
 import java.io.*;
 
-// java Client <host> <port> <oper> <opnd>*
+// multicast: <mcast_addr> <mcast_port>: <srvc_addr> <srvc_port>
+
+// java client <mcast_addr> <mcast_port> <oper> <opnd> *
 // Client: <oper> <opnd>* : <result>
 public class Client {
     // REGISTER <DNS name> <IP address>
@@ -23,12 +25,6 @@ public class Client {
                 return "";
             }
             request = "LOOKUP " + args[3];
-        } else if (oper.equals("end")) {
-            if (args.length != 3) {
-                System.out.println("Usage: java Client <host> <port> end");
-                return "";
-            }
-            request = "END";
         } else {
             System.out.println("Invalid operation! (Can either be 'register' or 'lookup')");
         }
@@ -42,12 +38,15 @@ public class Client {
             System.out.println("Client: " + args[2] + " " + args[3] + " " + args[4] + " : " + received);
         } else if (oper.equals("lookup")) {
             System.out.println("Client: " + args[2] + " " + args[3] + " : " + received);
-        } else if (oper.equals("end")) {
-            System.out.println(received);
         }
     }
 
     public static void main(String[] args) throws IOException {
+        if (args.length < 4) {
+            System.out.println("Usage: java Client <host> <port> <oper> <opnd>*");
+            return;
+        }
+
         String host = args[0];
         Integer port = Integer.parseInt(args[1]);
         String request = getRequest(args);
