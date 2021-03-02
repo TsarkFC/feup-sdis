@@ -13,19 +13,25 @@ public class ServerThread extends Thread {
 
     public void run() {
         System.out.println("Thread running");
+        Timer timer = new Timer();
         TimerTask task = new TimerTask() {
             public void run() {
                 try {
+                    if (socket.isClosed()) {
+                        System.out.println("closing timer tasks...");
+                        timer.purge();
+                        timer.cancel();
+                        return;
+                    }
+
                     socket.send(packet);
                     System.out.println("packet sent!");
                 } catch (Exception e) {
                 }
             }
         };
-        
-        System.out.println("Scheduled!");
-        new Timer().scheduleAtFixedRate(task, 0, 1000);
-        System.out.println("After schedule...");
-        System.out.println("End of thread process");
+
+        timer.scheduleAtFixedRate(task, 0, 1000);
+        System.out.println("Tasks scheduled!");
     }
 }

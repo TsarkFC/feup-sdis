@@ -44,13 +44,14 @@ public class Server {
         return dns + " " + response;
     }
 
-    private static DatagramPacket setMulticastMsg(int port, String ip, MulticastSocket socket) throws IOException{
-        String message = ip + " " + String.valueOf(port);
+    private static DatagramPacket setMulticastMsg(int srvc_port, String srvc_ip, int mcast_port, String mcast_ip,
+            MulticastSocket socket) throws IOException {
+        String message = srvc_ip + " " + String.valueOf(srvc_port);
         byte[] buf = message.getBytes();
-        InetAddress group = InetAddress.getByName(ip); // "225.0.0.0"
+        InetAddress group = InetAddress.getByName(mcast_ip); // "225.0.0.0"
         socket.joinGroup(group);
 
-        return new DatagramPacket(buf, buf.length, group, port);
+        return new DatagramPacket(buf, buf.length, group, mcast_port);
     }
 
     public static void main(String[] args) throws IOException {
@@ -61,12 +62,16 @@ public class Server {
 
         // start thread
         Integer mcast_port = Integer.parseInt(args[2]);
+        Integer srvc_port = Integer.parseInt(args[0]);
+        String mcast_ip = args[1];
+        String srvc_ip = "localhost";
+
         MulticastSocket mcast_socket = new MulticastSocket(mcast_port); // 4446
-        new ServerThread(setMulticastMsg(mcast_port, args[1], mcast_socket), mcast_socket).start();
+        ServerThread multicast = new ServerThread(setMulticastMsg(srvc_port, srvc_ip, mcast_port, mcast_ip, mcast_socket), mcast_socket);
+        multicast.start();
 
         // open server
-        Integer srvc_port = Integer.parseInt(args[0]);
-        InetAddress address = InetAddress.getByName("localhost");
+        InetAddress address = InetAddress.getByName(srvc_ip);
         DatagramSocket socket = new DatagramSocket(srvc_port, address);
         HashMap<String, String> dnsIp = new HashMap<String, String>();
         dnsIp.put("tsark.com", "128.0.0.0");
@@ -102,7 +107,8 @@ public class Server {
             packet = new DatagramPacket(sbuf, sbuf.length, address, packet.getPort());
             socket.send(packet);
         }
-
+        
+        multicast.interrupt();
         mcast_socket.close();
         socket.close();
     }

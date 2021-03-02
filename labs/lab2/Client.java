@@ -3,8 +3,7 @@ import java.io.*;
 
 // multicast: <mcast_addr> <mcast_port>: <srvc_addr> <srvc_port>
 
-// java client <mcast_addr> <mcast_port> <oper> <opnd> *
-// Client: <oper> <opnd>* : <result>
+// java Client <mcast_addr> <mcast_port> <oper> <opnd> *
 public class Client {
     // REGISTER <DNS name> <IP address>
     // LOOKUP <DNS name>
@@ -62,11 +61,10 @@ public class Client {
         socket.setSoTimeout(3000);
 
         byte[] sbuf = request.getBytes();
-        DatagramPacket packet = new DatagramPacket(sbuf, sbuf.length, address, Integer.parseInt(server_addr[0]));
+        DatagramPacket packet = new DatagramPacket(sbuf, sbuf.length, address, Integer.parseInt(server_addr[1]));
         socket.send(packet);
 
         System.out.println("request sent...");
-        System.out.println("socket address: " + socket.getLocalSocketAddress());
     }
 
     private static DatagramPacket getResponse(DatagramSocket socket) throws IOException{
@@ -102,30 +100,8 @@ public class Client {
         DatagramSocket socket = new DatagramSocket();
         sendRequest(server_addr, socket, request);
 
-        // InetAddress address = InetAddress.getByName(server_addr.getKey());
-        // DatagramSocket socket = new DatagramSocket();
-        // socket.setSoTimeout(3000);
-
-        // byte[] sbuf = request.getBytes();
-        // DatagramPacket packet = new DatagramPacket(sbuf, sbuf.length, address,
-        // server_addr.getValue());
-        // socket.send(packet);
-
-        // System.out.println("request sent...");
-        // System.out.println("socket address: " + socket.getLocalSocketAddress());
-
         // get response
         DatagramPacket packet = getResponse(socket);
-        // byte[] rbuf = new byte[256];
-        // packet = new DatagramPacket(rbuf, rbuf.length);
-
-        // try {
-        //     socket.receive(packet);
-        // } catch (SocketTimeoutException e) {
-        //     System.out.println("Time out!");
-        //     socket.close();
-        //     return;
-        // }
 
         // display response
         String received = new String(packet.getData(), 0, packet.getLength());
