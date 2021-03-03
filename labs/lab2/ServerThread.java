@@ -11,6 +11,12 @@ public class ServerThread extends Thread {
         this.socket = socket;
     }
 
+    // multicast: <mcast_addr> <mcast_port>: <srvc_addr> <srvc_port>
+    private void multicastLog() {
+        String data = new String(packet.getData());
+        System.out.println("multicast: " + packet.getAddress() + " " + packet.getPort() + " " + data);
+    }
+
     public void run() {
         System.out.println("Thread running");
         Timer timer = new Timer();
@@ -25,7 +31,7 @@ public class ServerThread extends Thread {
                     }
 
                     socket.send(packet);
-                    System.out.println("packet sent!");
+                    multicastLog();
                 } catch (Exception e) {
                 }
             }

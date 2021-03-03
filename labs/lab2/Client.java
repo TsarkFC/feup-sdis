@@ -47,10 +47,17 @@ public class Client {
         }
     }
 
+    // multicast: <mcast_addr> <mcast_port>: <srvc_addr> <srvc_port>
+    private static void multicastLog(DatagramPacket packet){
+        String data = new String(packet.getData());
+        System.out.println("multicast: " + packet.getAddress() + " " + packet.getPort() + " " + data);
+    }
+
     private static String[] getServerAddr(MulticastSocket socket) throws IOException{
         byte[] rbuf = new byte[256];
         DatagramPacket packet = new DatagramPacket(rbuf, rbuf.length);
         socket.receive(packet);
+        multicastLog(packet);
 
         String rcvd = new String(packet.getData(), 0, packet.getLength());
         return rcvd.split(" ");
