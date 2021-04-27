@@ -1,4 +1,3 @@
-import java.net.*;
 import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,13 +55,14 @@ public class Server {
         try {
             serverSocket = (SSLServerSocket) factory.createServerSocket(portNumber);
         } catch (IOException e) {
-            System.out.println("Server - Failed to create SSLServerSocket");
+            System.out.println("Server: Failed to create SSLServerSocket");
             e.getMessage();
             return;
         }
 
         // Require client authentication
         serverSocket.setNeedClientAuth(true);
+        serverSocket.setEnabledProtocols(serverSocket.getSupportedProtocols());
         serverSocket.setEnabledCipherSuites(cypherSuites);
 
         String inputLine;

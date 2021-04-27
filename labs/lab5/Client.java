@@ -57,14 +57,14 @@ public class Client {
         factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
         try {
-            socket = (SSLSocket) factory.createSocket(socket, hostName, portNumber, true);
+            socket = (SSLSocket) factory.createSocket(hostName, portNumber);
         } catch (IOException e) {
-            System.out.println("Client - Failed to create SSLSocket");
+            System.out.println("Client: Failed to create SSLSocket");
             e.getMessage();
             return;
         }
 
-        socket.startHandshake();
+        socket.setEnabledCipherSuites(cypherSuites);
 
         try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));) {
