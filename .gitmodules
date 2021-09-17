@@ -1,0 +1,6 @@
+[submodule "sdis-proj1"]
+	path = sdis-proj1
+	url = https://github.com/TsarkFC/sdis-proj1
+[submodule "sdis-proj2"]
+	path = sdis-proj2
+	url = https://github.com/TsarkFC/sdis-proj2
